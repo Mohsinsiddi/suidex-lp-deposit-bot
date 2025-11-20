@@ -219,15 +219,29 @@ export class EventListener {
   }
 
   private isTargetPool(poolType: string): boolean {
+    // Normalize by removing 0x prefix for comparison
+    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    
+    const normalizedPoolType = normalizeType(poolType);
+    const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
+    const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    
     return (
-      poolType === PAIRS.VICTORY_SUI.lpType ||
-      poolType === PAIRS.VICTORY_USDC.lpType
+      normalizedPoolType === normalizedVictorySUI ||
+      normalizedPoolType === normalizedVictoryUSDC
     );
   }
 
   private getPoolName(poolType: string): string {
-    if (poolType === PAIRS.VICTORY_SUI.lpType) return PAIRS.VICTORY_SUI.name;
-    if (poolType === PAIRS.VICTORY_USDC.lpType) return PAIRS.VICTORY_USDC.name;
+    // Normalize by removing 0x prefix for comparison
+    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    
+    const normalizedPoolType = normalizeType(poolType);
+    const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
+    const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    
+    if (normalizedPoolType === normalizedVictorySUI) return PAIRS.VICTORY_SUI.name;
+    if (normalizedPoolType === normalizedVictoryUSDC) return PAIRS.VICTORY_USDC.name;
     return 'Unknown Pool';
   }
 
