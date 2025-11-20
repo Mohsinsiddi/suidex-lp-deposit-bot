@@ -13,6 +13,7 @@ import {
   sendDailyLeaderboard,
   isAdmin,
   formatLeaderboard,
+  formatDepositHistory,
 } from './telegram';
 import {
   startNewCompetition,
@@ -52,7 +53,7 @@ async function main() {
     
     console.log('\n✅ Bot is running!');
     console.log('📊 Monitoring Victory/SUI and Victory/USDC pools');
-    console.log('🎯 Admin commands: /start, /lb, /resetlb, /addstake');
+    console.log('🎯 Commands: /lb, /deposits <wallet>, /start, /resetlb, /addstake');
     
   } catch (error) {
     console.error('❌ Failed to start bot:', error);
@@ -132,10 +133,45 @@ function setupCommands(bot: any) {
   bot.onText(/\/lb/, async (msg: any) => {
     try {
       const message = await formatLeaderboard();
-      await bot.sendMessage(msg.chat.id, message);
+      await bot.sendMessage(msg.chat.id, message, { 
+        parse_mode: 'MarkdownV2',
+        disable_web_page_preview: true 
+      });
     } catch (error) {
       console.error('Error showing leaderboard:', error);
       await bot.sendMessage(msg.chat.id, '❌ Error fetching leaderboard');
+    }
+  });
+  
+  // /deposits <wallet> - Show user deposit history (anyone can use)
+  bot.onText(/\/deposits(?:\s+(.+))?/, async (msg: any, match: any) => {
+    try {
+      const wallet = match[1]?.trim();
+      
+      if (!wallet) {
+        await bot.sendMessage(
+          msg.chat.id, 
+          '📋 *Usage:* /deposits <wallet\\_address>\n\n' +
+          '_Example:_ `/deposits 0xabc123\\.\\.\\.`',
+          { parse_mode: 'MarkdownV2' }
+        );
+        return;
+      }
+      
+      // Validate wallet format
+      if (!wallet.startsWith('0x') || wallet.length < 10) {
+        await bot.sendMessage(msg.chat.id, '❌ Invalid wallet address format');
+        return;
+      }
+      
+      const message = await formatDepositHistory(wallet);
+      await bot.sendMessage(msg.chat.id, message, { 
+        parse_mode: 'MarkdownV2',
+        disable_web_page_preview: true 
+      });
+    } catch (error) {
+      console.error('Error showing deposits:', error);
+      await bot.sendMessage(msg.chat.id, '❌ Error fetching deposit history');
     }
   });
   

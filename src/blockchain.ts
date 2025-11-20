@@ -177,15 +177,11 @@ export class EventListener {
       console.log(`   Timestamp: ${timestamp}`);
 
       // Check if target pool
-      console.log(`\n🎯 Pool Type Check:`);
-      console.log(`   Received:         ${poolType}`);
-      console.log(`   Victory/SUI LP:   ${PAIRS.VICTORY_SUI.lpType}`);
-      console.log(`   Victory/USDC LP:  ${PAIRS.VICTORY_USDC.lpType}`);
-      console.log(`   Match: ${poolType === PAIRS.VICTORY_SUI.lpType || poolType === PAIRS.VICTORY_USDC.lpType ? '✅' : '❌'}`);
+      console.log(`\n🎯 Checking Pool Match...`);
 
       // Filter: Only track our 2 pools
       if (!this.isTargetPool(poolType)) {
-        console.log(`\n❌ FILTERED OUT: Not a target pool`);
+        console.log(`   ❌ Not a target pool`);
         console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
         return false;
       }
