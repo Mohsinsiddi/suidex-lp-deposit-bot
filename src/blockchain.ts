@@ -33,6 +33,9 @@ export class EventListener {
     await this.initializeSeenEvents();
     
     console.log('✅ Event listener active (polling every 5 seconds)');
+    console.log('\n📋 TARGET POOLS:');
+    console.log(`   Victory/SUI LP:  ${PAIRS.VICTORY_SUI.lpType}`);
+    console.log(`   Victory/USDC LP: ${PAIRS.VICTORY_USDC.lpType}\n`);
     
     // Then start polling for new events
     this.pollingInterval = setInterval(async () => {
@@ -41,29 +44,29 @@ export class EventListener {
   }
 
   private async initializeSeenEvents() {
-    console.log('🔍 Loading recent events to mark as seen...');
+    console.log('🔍 Loading recent Staked events to mark as seen...');
     
     try {
       const events = await this.client.queryEvents({
         query: {
-          MoveEventModule: {
-            package: CONTRACTS.PACKAGE_ID,
-            module: 'farm',
-          },
+          MoveEventType: `${CONTRACTS.PACKAGE_ID}::farm::Staked`
         },
         order: 'descending', // Get latest first
         limit: 50,
       });
 
+      console.log(`   Found ${events.data.length} recent Staked events`);
+
       // Mark all as seen
       for (const event of events.data) {
-        if (event.type.endsWith('::farm::Staked')) {
-          const parsedJson = event.parsedJson as any;
-          const poolType = parsedJson.pool_type;
-          
-          if (this.isTargetPool(poolType)) {
-            this.seenEvents.add(event.id.txDigest);
-          }
+        const parsedJson = event.parsedJson as any;
+        
+        // Fix: pool_type is an object with a 'name' field
+        const poolTypeObj = parsedJson.pool_type;
+        const poolType = typeof poolTypeObj === 'string' ? poolTypeObj : poolTypeObj.name;
+        
+        if (this.isTargetPool(poolType)) {
+          this.seenEvents.add(event.id.txDigest);
         }
       }
       
@@ -82,10 +85,7 @@ export class EventListener {
     try {
       const events = await this.client.queryEvents({
         query: {
-          MoveEventModule: {
-            package: CONTRACTS.PACKAGE_ID,
-            module: 'farm',
-          },
+          MoveEventType: `${CONTRACTS.PACKAGE_ID}::farm::Staked`
         },
         order: 'descending', // Get newest first
         limit: 50,
@@ -102,6 +102,7 @@ export class EventListener {
       let newEventsCount = 0;
       let alreadySeenCount = 0;
       let oldEventsSkipped = 0;
+      let processedSuccessfully = 0;
 
       for (const event of events.data) {
         const digest = event.id.txDigest;
@@ -125,12 +126,15 @@ export class EventListener {
 
         // This is a NEW event after bot start time!
         const processed = await this.handleEvent(event);
+        if (processed) {
+          processedSuccessfully++;
+        }
       }
 
       // Log stats if there were new events
       if (newEventsCount > 0 || alreadySeenCount > 0) {
         const timestamp = new Date().toLocaleTimeString();
-        console.log(`[${timestamp}] New: ${newEventsCount} | Already seen: ${alreadySeenCount} | Old: ${oldEventsSkipped} | Tracked: ${this.seenEvents.size}`);
+        console.log(`[${timestamp}] New: ${newEventsCount} | Processed: ${processedSuccessfully} | Already seen: ${alreadySeenCount} | Old: ${oldEventsSkipped} | Tracked: ${this.seenEvents.size}`);
       }
 
       // Cleanup seen set (keep last 1000)
@@ -151,25 +155,47 @@ export class EventListener {
 
   private async handleEvent(event: any): Promise<boolean> {
     try {
-      if (!event.type.endsWith('::farm::Staked')) {
-        return false;
-      }
+      console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`🔍 NEW STAKED EVENT`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`TX Digest: ${event.id.txDigest}`);
 
       const parsedJson = event.parsedJson as any;
       const staker = parsedJson.staker;
-      const poolType = parsedJson.pool_type;
+      
+      // Fix: pool_type is an object with a 'name' field
+      const poolTypeObj = parsedJson.pool_type;
+      const poolType = typeof poolTypeObj === 'string' ? poolTypeObj : poolTypeObj.name;
+      
       const amount = parsedJson.amount;
       const timestamp = parsedJson.timestamp;
 
+      console.log(`\n📊 Event Details:`);
+      console.log(`   Staker:    ${staker}`);
+      console.log(`   Pool Type: ${poolType}`);
+      console.log(`   Amount:    ${amount}`);
+      console.log(`   Timestamp: ${timestamp}`);
+
+      // Check if target pool
+      console.log(`\n🎯 Pool Type Check:`);
+      console.log(`   Received:         ${poolType}`);
+      console.log(`   Victory/SUI LP:   ${PAIRS.VICTORY_SUI.lpType}`);
+      console.log(`   Victory/USDC LP:  ${PAIRS.VICTORY_USDC.lpType}`);
+      console.log(`   Match: ${poolType === PAIRS.VICTORY_SUI.lpType || poolType === PAIRS.VICTORY_USDC.lpType ? '✅' : '❌'}`);
+
       // Filter: Only track our 2 pools
       if (!this.isTargetPool(poolType)) {
+        console.log(`\n❌ FILTERED OUT: Not a target pool`);
+        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
         return false;
       }
 
       const poolName = this.getPoolName(poolType);
-      console.log(`🔥 NEW DEPOSIT in ${poolName}: ${staker.slice(0, 6)}...${staker.slice(-4)}`);
+      console.log(`\n✅ TARGET POOL MATCHED: ${poolName}`);
+      console.log(`🔥 NEW DEPOSIT: ${staker.slice(0, 6)}...${staker.slice(-4)}`);
 
       if (this.onStakeCallback) {
+        console.log(`📤 Sending Telegram alert...`);
         await this.onStakeCallback({
           staker,
           poolType,
@@ -178,11 +204,16 @@ export class EventListener {
           timestamp: parseInt(timestamp),
           txDigest: event.id.txDigest,
         });
+        console.log(`✅ Alert sent successfully!`);
+      } else {
+        console.log(`⚠️  WARNING: No callback registered!`);
       }
 
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
       return true;
     } catch (error) {
       console.error('❌ Error handling event:', error);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
       return false;
     }
   }
