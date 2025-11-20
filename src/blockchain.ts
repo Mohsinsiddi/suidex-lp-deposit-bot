@@ -51,7 +51,7 @@ export class EventListener {
         query: {
           MoveEventType: `${CONTRACTS.PACKAGE_ID}::farm::Staked`
         },
-        order: 'descending', // Get latest first
+        order: 'descending',
         limit: 50,
       });
 
@@ -219,8 +219,12 @@ export class EventListener {
   }
 
   private isTargetPool(poolType: string): boolean {
-    // Normalize by removing 0x prefix for comparison
-    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    // Normalize by removing 0x prefix and converting padded zeros
+    const normalizeType = (type: string) => {
+      return type
+        .replace(/0x/g, '')  // Remove 0x
+        .replace(/\b0+(\d+)\b/g, '$1');  // Convert 0000...002 to 2
+    };
     
     const normalizedPoolType = normalizeType(poolType);
     const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
@@ -233,8 +237,12 @@ export class EventListener {
   }
 
   private getPoolName(poolType: string): string {
-    // Normalize by removing 0x prefix for comparison
-    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    // Normalize by removing 0x prefix and converting padded zeros
+    const normalizeType = (type: string) => {
+      return type
+        .replace(/0x/g, '')
+        .replace(/\b0+(\d+)\b/g, '$1');
+    };
     
     const normalizedPoolType = normalizeType(poolType);
     const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
@@ -375,8 +383,12 @@ export class PriceOracle {
   }
 
   private getPoolConfig(poolType: string) {
-    // Normalize by removing 0x prefix for comparison
-    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    // Normalize by removing 0x prefix and converting padded zeros
+    const normalizeType = (type: string) => {
+      return type
+        .replace(/0x/g, '')
+        .replace(/\b0+(\d+)\b/g, '$1');
+    };
     
     const normalizedPoolType = normalizeType(poolType);
     const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
