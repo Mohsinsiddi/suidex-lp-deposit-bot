@@ -375,8 +375,15 @@ export class PriceOracle {
   }
 
   private getPoolConfig(poolType: string) {
-    if (poolType === PAIRS.VICTORY_SUI.lpType) return PAIRS.VICTORY_SUI;
-    if (poolType === PAIRS.VICTORY_USDC.lpType) return PAIRS.VICTORY_USDC;
+    // Normalize by removing 0x prefix for comparison
+    const normalizeType = (type: string) => type.replace(/0x/g, '');
+    
+    const normalizedPoolType = normalizeType(poolType);
+    const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
+    const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    
+    if (normalizedPoolType === normalizedVictorySUI) return PAIRS.VICTORY_SUI;
+    if (normalizedPoolType === normalizedVictoryUSDC) return PAIRS.VICTORY_USDC;
     throw new Error(`Unknown pool type: ${poolType}`);
   }
 
