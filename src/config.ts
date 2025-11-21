@@ -36,13 +36,14 @@ export const CONFIG = {
   MONGODB_URI: process.env.MONGODB_URI!,
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
-  // ✨ ADD THESE TEST SETTINGS
+  // Settings
+  COMPETITION_DURATION_DAYS: parseInt(process.env.COMPETITION_DURATION_DAYS || '7'),
+  
+  // Test Mode Settings
   TEST_MODE: process.env.TEST_MODE === 'true',
   TEST_COMPETITION_MINUTES: parseInt(process.env.TEST_COMPETITION_MINUTES || '10'),
   TEST_DAILY_UPDATE_MINUTES: parseInt(process.env.TEST_DAILY_UPDATE_MINUTES || '2'),
-
-  // Settings
-  COMPETITION_DURATION_DAYS: parseInt(process.env.COMPETITION_DURATION_DAYS || '7'),
+  
   DAILY_UPDATE_HOUR: parseInt(process.env.DAILY_UPDATE_HOUR || '0'),
   MIN_DEPOSIT_USD: parseFloat(process.env.MIN_DEPOSIT_USD || '1'),
 };
@@ -88,4 +89,9 @@ export const PRIZES = {
   3: 50000,
   4: 20000,
   5: 10000,
+};
+
+export const BANNERS = {
+  LEADERBOARD: 'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/leaderboard.png',
+  WINNERS: 'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/winners.png',
 };

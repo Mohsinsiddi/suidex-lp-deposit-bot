@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { CONFIG } from './config';
+import { CONFIG, BANNERS } from './config';
 import { getTopLeaderboard, getCurrentCompetition, getDepositsCollection } from './database';
 
 let bot: TelegramBot;
@@ -22,6 +22,18 @@ export function getBot(): TelegramBot {
 // Helper to escape MarkdownV2 special characters
 function escapeMarkdown(text: string | number): string {
   return String(text).replace(/[_*\[\]()~`>#+\-=|{}.!]/g, '\\$&');
+}
+
+// Helper to format date and time
+function formatDateTime(date: Date): string {
+  return date.toISOString()
+    .replace('T', ' ')
+    .slice(0, 19) + ' UTC';
+}
+
+function formatDateTimeMarkdown(date: Date): string {
+  const formatted = formatDateTime(date);
+  return escapeMarkdown(formatted);
 }
 
 export function formatDepositAlert(data: {
@@ -68,11 +80,11 @@ Admin: Use /start to begin\\!`;
   const top5 = await getTopLeaderboard(competition.competitionId, 5);
   
   if (top5.length === 0) {
-    const endDate = competition.endTime.toISOString().split('T')[0];
+    const endTime = formatDateTimeMarkdown(competition.endTime);
     return `🏆 *SuiDeX Biggest Stake Leaderboard*
 
 📊 Competition Active
-🏁 Ends: ${escapeMarkdown(endDate)}
+🏁 Ends: ${endTime}
 
 💤 No deposits yet\\. Be the first\\!`;
   }
@@ -86,16 +98,18 @@ Admin: Use /start to begin\\!`;
    💎 ${escapeMarkdown(pools)}`;
   }).join('\n\n');
   
-  const endDate = competition.endTime.toISOString().split('T')[0];
+  const endTime = formatDateTimeMarkdown(competition.endTime);
   
   return `🏆 *SuiDeX Biggest Stake Leaderboard*
 
 ${lines}
 
-🏁 *Competition ends:* ${escapeMarkdown(endDate)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏁 *Ends:* ${endTime}
 
-💡 _Use /lb anytime to check leaderboard_
-💡 _Use /deposits <wallet\\> to see your history_`;
+💡 /lb \\- Check leaderboard
+💡 /deposits \\<wallet\\> \\- View history
+💡 /help \\- All commands`;
 }
 
 export async function formatDepositHistory(wallet: string): Promise<string> {
@@ -143,7 +157,7 @@ No deposits in current competition\\.`;
 💰 *Total:* *$${escapeMarkdown(totalUSD.toFixed(2))}*
 📦 *Deposits:* ${deposits.length}
 
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${depositLines}
 
@@ -173,7 +187,7 @@ export function formatWinnerAnnouncement(winners: Array<{
 
 ${lines}
 
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString())} VICTORY \\(\\~$1,000\\)
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
@@ -199,7 +213,7 @@ export async function sendDailyLeaderboard() {
   try {
     await bot.sendPhoto(
       CONFIG.CHAT_ID,
-      'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/leaderboard.png',
+      BANNERS.LEADERBOARD,
       {
         caption: message,
         parse_mode: 'MarkdownV2',
@@ -221,7 +235,7 @@ export async function sendWinnerAnnouncement(winners: Parameters<typeof formatWi
   try {
     await bot.sendPhoto(
       CONFIG.CHAT_ID,
-      'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/winners.png',
+      BANNERS.WINNERS,
       {
         caption: message,
         parse_mode: 'MarkdownV2',

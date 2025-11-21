@@ -175,7 +175,7 @@ export async function createCompetition(startTime: Date): Promise<Competition> {
   
   const endTime = new Date(startTime);
   
-  // ✨ TEST MODE: Use minutes instead of days
+  // Support TEST MODE: Use minutes instead of days
   if (CONFIG.TEST_MODE) {
     endTime.setMinutes(endTime.getMinutes() + CONFIG.TEST_COMPETITION_MINUTES);
     console.log(`🧪 TEST MODE: Competition ends in ${CONFIG.TEST_COMPETITION_MINUTES} minutes`);

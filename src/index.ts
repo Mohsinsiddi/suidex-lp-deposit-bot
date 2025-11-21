@@ -19,6 +19,7 @@ import {
   startNewCompetition,
   checkCompetitionEnd,
   manualResetLeaderboard,
+  stopCompetition,
 } from './competition';
 import { CONFIG } from './config';
 
@@ -53,7 +54,7 @@ async function main() {
     
     console.log('\n✅ Bot is running!');
     console.log('📊 Monitoring Victory/SUI and Victory/USDC pools');
-    console.log('🎯 Commands: /lb, /deposits <wallet>, /start, /resetlb, /addstake');
+    console.log('🎯 Commands: /help, /lb, /deposits, /start, /stop, /resetlb, /addstake');
     
   } catch (error) {
     console.error('❌ Failed to start bot:', error);
@@ -129,6 +130,64 @@ async function handleStakeEvent(event: StakeEvent) {
 // ============================================
 
 function setupCommands(bot: any) {
+  // /help - Show all commands
+  bot.onText(/\/help/, async (msg: any) => {
+    const isUserAdmin = isAdmin(msg.from.id);
+    
+    let message = `📖 SUIDEX STAKING BOT HELP
+
+  👥 USER COMMANDS:
+
+  /help
+    Show this help message
+
+  /lb
+    View current leaderboard
+
+  /deposits <wallet>
+    View deposit history for a wallet
+    Example: /deposits 0xabc123...
+  `;
+
+    if (isUserAdmin) {
+      message += `
+  🔐 ADMIN COMMANDS:
+
+  /start
+    Start a new competition
+
+  /stop
+    End current competition early
+
+  /resetlb
+    Reset current leaderboard
+
+  /addstake <wallet> <pool> <usd>
+    Manually add a stake entry
+    Example: /addstake 0xabc Victory/SUI 500
+  `;
+    }
+
+    const durationText = CONFIG.TEST_MODE ? 
+      `${CONFIG.TEST_COMPETITION_MINUTES} min (TEST)` : 
+      `${CONFIG.COMPETITION_DURATION_DAYS} days`;
+
+    message += `
+  📊 COMPETITION INFO:
+  - Duration: ${durationText}
+  - Min Deposit: $${CONFIG.MIN_DEPOSIT_USD}
+  - Prize Pool: ~$1,000 in VICTORY tokens
+  - Vesting: 30 days (daily distribution)
+
+  🏊 TRACKED POOLS:
+  - Victory/SUI LP
+  - Victory/USDC LP
+
+  💡 All deposits are tracked automatically!`;
+
+    await bot.sendMessage(msg.chat.id, message); // No parse_mode
+  });
+
   // /lb - Show leaderboard (anyone can use)
   bot.onText(/\/lb/, async (msg: any) => {
     try {
@@ -183,10 +242,25 @@ function setupCommands(bot: any) {
     
     try {
       const result = await startNewCompetition();
-      await bot.sendMessage(msg.chat.id, result);
+      await bot.sendMessage(msg.chat.id, result, { parse_mode: 'MarkdownV2' });
     } catch (error) {
       console.error('Error starting competition:', error);
       await bot.sendMessage(msg.chat.id, '❌ Error starting competition');
+    }
+  });
+  
+  // /stop - Stop competition (admin only)
+  bot.onText(/\/stop/, async (msg: any) => {
+    if (!isAdmin(msg.from.id)) {
+      return bot.sendMessage(msg.chat.id, '❌ Admin only command');
+    }
+    
+    try {
+      const result = await stopCompetition();
+      await bot.sendMessage(msg.chat.id, result, { parse_mode: 'MarkdownV2' });
+    } catch (error) {
+      console.error('Error stopping competition:', error);
+      await bot.sendMessage(msg.chat.id, '❌ Error stopping competition');
     }
   });
   
@@ -249,7 +323,7 @@ function setupCommands(bot: any) {
 // ============================================
 
 function setupCronJobs() {
-  // ✨ DAILY LEADERBOARD - TEST MODE: Every 2 minutes, PROD: Daily at configured hour
+  // Daily leaderboard update - TEST MODE: Every 2 minutes, PROD: Daily at configured hour
   if (CONFIG.TEST_MODE) {
     const cronExpression = `*/${CONFIG.TEST_DAILY_UPDATE_MINUTES} * * * *`;
     cron.schedule(cronExpression, async () => {
@@ -276,7 +350,7 @@ function setupCronJobs() {
     console.log(`⏰ Daily updates scheduled for ${CONFIG.DAILY_UPDATE_HOUR}:00 UTC`);
   }
   
-  // ✨ COMPETITION END CHECK - TEST MODE: Every minute, PROD: Every hour
+  // Check for competition end - TEST MODE: Every minute, PROD: Every hour
   if (CONFIG.TEST_MODE) {
     cron.schedule('* * * * *', async () => {
       await checkCompetitionEnd();

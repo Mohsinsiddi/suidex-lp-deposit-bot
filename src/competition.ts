@@ -1,5 +1,6 @@
 import { createObjectCsvWriter } from 'csv-writer';
 import path from 'path';
+import { mkdir } from 'fs/promises';
 import {
   getCurrentCompetition,
   createCompetition,
@@ -7,25 +8,67 @@ import {
   clearLeaderboard,
   getTopLeaderboard,
 } from './database';
-import { PRIZES ,CONFIG} from './config';
+import { PRIZES, CONFIG } from './config';
 import { sendWinnerAnnouncement, getBot } from './telegram';
+
+// Helper to escape MarkdownV2 special characters
+function escapeMarkdown(text: string | number): string {
+  return String(text).replace(/[_*\[\]()~`>#+\-=|{}.!]/g, '\\$&');
+}
+
+// Helper to format date and time
+function formatDateTime(date: Date): string {
+  return date.toISOString()
+    .replace('T', ' ')
+    .slice(0, 19) + ' UTC';
+}
 
 export async function startNewCompetition(): Promise<string> {
   const existing = await getCurrentCompetition();
   
   if (existing) {
-    return `❌ Competition already active! Ends: ${existing.endTime.toISOString()}`;
+    const endTime = formatDateTime(existing.endTime);
+    return `❌ *Competition Already Active\\!*
+
+📅 Ends: ${escapeMarkdown(endTime)}
+
+Use /stop to end it early \\(admin only\\)`;
   }
   
   const competition = await createCompetition(new Date());
+  const startTime = formatDateTime(competition.startTime);
+  const endTime = formatDateTime(competition.endTime);
+  const durationDays = CONFIG.TEST_MODE ? 
+    `${CONFIG.TEST_COMPETITION_MINUTES} minutes \\(TEST MODE\\)` : 
+    `${CONFIG.COMPETITION_DURATION_DAYS} days`;
   
-  return `🏁 Competition Started!
+  return `🏁 *COMPETITION STARTED\\!* 🏁
 
-Competition ID: ${competition.competitionId}
-Start: ${competition.startTime.toISOString().split('T')[0]}
-End: ${competition.endTime.toISOString().split('T')[0]}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🆔 *ID:* \`${escapeMarkdown(competition.competitionId)}\`
+📅 *Start:* ${escapeMarkdown(startTime)}
+🏁 *End:* ${escapeMarkdown(endTime)}
+⏱️ *Duration:* ${durationDays}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Tracking deposits for 7 days. Good luck! 🚀`;
+🎯 *TARGET POOLS:*
+   • Victory/SUI LP
+   • Victory/USDC LP
+
+💰 *PRIZE POOL \\(\\~$1,000\\):*
+   🥇 1st: 200,000 VICTORY
+   🥈 2nd: 75,000 VICTORY
+   🥉 3rd: 50,000 VICTORY
+   4️⃣ 4th: 20,000 VICTORY
+   5️⃣ 5th: 10,000 VICTORY
+
+⏳ *Vesting:* 30 days \\(daily distribution\\)
+
+📊 Track progress: /lb
+📂 Your history: /deposits \\<wallet\\>
+❓ Need help: /help
+
+🚀 *MAY THE BIGGEST STAKER WIN\\!*`;
 }
 
 export async function checkCompetitionEnd() {
@@ -39,6 +82,33 @@ export async function checkCompetitionEnd() {
     console.log('🏁 Competition ended, processing winners...');
     await processCompetitionEnd(competition.competitionId);
   }
+}
+
+export async function stopCompetition(): Promise<string> {
+  const competition = await getCurrentCompetition();
+  
+  if (!competition) {
+    return '❌ No active competition to stop';
+  }
+  
+  console.log('🛑 Manually stopping competition:', competition.competitionId);
+  
+  // Process winners immediately
+  await processCompetitionEnd(competition.competitionId);
+  
+  const startTime = formatDateTime(competition.startTime);
+  const endTime = formatDateTime(new Date());
+  
+  return `🛑 *COMPETITION STOPPED\\!*
+
+🆔 ID: \`${escapeMarkdown(competition.competitionId)}\`
+📅 Started: ${escapeMarkdown(startTime)}
+🏁 Ended: ${escapeMarkdown(endTime)}
+
+✅ Winners have been announced\\!
+📊 CSV exported for reward distribution\\.
+
+Use /start to begin a new competition\\.`;
 }
 
 async function processCompetitionEnd(competitionId: string) {
@@ -78,7 +148,12 @@ async function exportWinnersCSV(
   winners: Array<{ rank: number; wallet: string; totalUSD: number; prize: number }>
 ): Promise<string> {
   const filename = `winners_${competitionId}.csv`;
-  const filepath = path.join(process.cwd(), 'exports', filename);
+  const exportDir = path.join(process.cwd(), 'exports');
+  
+  // Create exports directory if it doesn't exist
+  await mkdir(exportDir, { recursive: true });
+  
+  const filepath = path.join(exportDir, filename);
   
   const csvWriter = createObjectCsvWriter({
     path: filepath,
