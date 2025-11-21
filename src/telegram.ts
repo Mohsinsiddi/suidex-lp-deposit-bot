@@ -195,18 +195,46 @@ export async function sendDepositAlert(data: Parameters<typeof formatDepositAler
 
 export async function sendDailyLeaderboard() {
   const message = await formatLeaderboard();
-  await bot.sendMessage(CONFIG.CHAT_ID, message, { 
-    parse_mode: 'MarkdownV2',
-    disable_web_page_preview: true 
-  });
+  
+  try {
+    await bot.sendPhoto(
+      CONFIG.CHAT_ID,
+      'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/leaderboard.png',
+      {
+        caption: message,
+        parse_mode: 'MarkdownV2',
+      }
+    );
+  } catch (error) {
+    console.error('Error sending leaderboard with banner:', error);
+    // Fallback to text-only
+    await bot.sendMessage(CONFIG.CHAT_ID, message, { 
+      parse_mode: 'MarkdownV2',
+      disable_web_page_preview: true 
+    });
+  }
 }
 
 export async function sendWinnerAnnouncement(winners: Parameters<typeof formatWinnerAnnouncement>[0]) {
   const message = formatWinnerAnnouncement(winners);
-  await bot.sendMessage(CONFIG.CHAT_ID, message, { 
-    parse_mode: 'MarkdownV2',
-    disable_web_page_preview: true 
-  });
+  
+  try {
+    await bot.sendPhoto(
+      CONFIG.CHAT_ID,
+      'https://cryptomischief.mypinata.cloud/ipfs/bafybeicnrxucdkt5jvbpmsdc6y7baljkvit5hsdbg5rou7556mu7aoaqcq/winners.png',
+      {
+        caption: message,
+        parse_mode: 'MarkdownV2',
+      }
+    );
+  } catch (error) {
+    console.error('Error sending winners with banner:', error);
+    // Fallback to text-only
+    await bot.sendMessage(CONFIG.CHAT_ID, message, { 
+      parse_mode: 'MarkdownV2',
+      disable_web_page_preview: true 
+    });
+  }
 }
 
 // ============================================

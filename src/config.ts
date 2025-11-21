@@ -36,6 +36,11 @@ export const CONFIG = {
   MONGODB_URI: process.env.MONGODB_URI!,
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
+  // ✨ ADD THESE TEST SETTINGS
+  TEST_MODE: process.env.TEST_MODE === 'true',
+  TEST_COMPETITION_MINUTES: parseInt(process.env.TEST_COMPETITION_MINUTES || '10'),
+  TEST_DAILY_UPDATE_MINUTES: parseInt(process.env.TEST_DAILY_UPDATE_MINUTES || '2'),
+
   // Settings
   COMPETITION_DURATION_DAYS: parseInt(process.env.COMPETITION_DURATION_DAYS || '7'),
   DAILY_UPDATE_HOUR: parseInt(process.env.DAILY_UPDATE_HOUR || '0'),

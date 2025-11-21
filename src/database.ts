@@ -174,7 +174,14 @@ export async function createCompetition(startTime: Date): Promise<Competition> {
   const competitionsCol = getCompetitionsCollection();
   
   const endTime = new Date(startTime);
-  endTime.setDate(endTime.getDate() + CONFIG.COMPETITION_DURATION_DAYS);
+  
+  // ✨ TEST MODE: Use minutes instead of days
+  if (CONFIG.TEST_MODE) {
+    endTime.setMinutes(endTime.getMinutes() + CONFIG.TEST_COMPETITION_MINUTES);
+    console.log(`🧪 TEST MODE: Competition ends in ${CONFIG.TEST_COMPETITION_MINUTES} minutes`);
+  } else {
+    endTime.setDate(endTime.getDate() + CONFIG.COMPETITION_DURATION_DAYS);
+  }
   
   const competition: Competition = {
     competitionId: `comp_${Date.now()}`,

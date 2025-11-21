@@ -371,6 +371,7 @@ export class PriceOracle {
         { signal: AbortSignal.timeout(5000) }
       );
       const data:any = await response.json();
+      console.log(`💲 SUI Price from CoinGecko: $${data.sui?.usd}`);
       return data.sui?.usd || 3.5;
     } catch (error) {
       console.warn('⚠️  CoinGecko API failed, using fallback $3.50');

@@ -249,25 +249,45 @@ function setupCommands(bot: any) {
 // ============================================
 
 function setupCronJobs() {
-  // Daily leaderboard update at configured hour (default 00:00 UTC)
-  const cronExpression = `0 ${CONFIG.DAILY_UPDATE_HOUR} * * *`;
-  cron.schedule(cronExpression, async () => {
-    console.log('📊 Running daily leaderboard update...');
+  // ✨ DAILY LEADERBOARD - TEST MODE: Every 2 minutes, PROD: Daily at configured hour
+  if (CONFIG.TEST_MODE) {
+    const cronExpression = `*/${CONFIG.TEST_DAILY_UPDATE_MINUTES} * * * *`;
+    cron.schedule(cronExpression, async () => {
+      console.log('📊 Running TEST leaderboard update...');
+      
+      const competition = await getCurrentCompetition();
+      if (competition) {
+        await sendDailyLeaderboard();
+      }
+    });
     
-    const competition = await getCurrentCompetition();
-    if (competition) {
-      await sendDailyLeaderboard();
-    }
-  });
+    console.log(`🧪 TEST MODE: Leaderboard updates every ${CONFIG.TEST_DAILY_UPDATE_MINUTES} minutes`);
+  } else {
+    const cronExpression = `0 ${CONFIG.DAILY_UPDATE_HOUR} * * *`;
+    cron.schedule(cronExpression, async () => {
+      console.log('📊 Running daily leaderboard update...');
+      
+      const competition = await getCurrentCompetition();
+      if (competition) {
+        await sendDailyLeaderboard();
+      }
+    });
+    
+    console.log(`⏰ Daily updates scheduled for ${CONFIG.DAILY_UPDATE_HOUR}:00 UTC`);
+  }
   
-  console.log(`⏰ Daily updates scheduled for ${CONFIG.DAILY_UPDATE_HOUR}:00 UTC`);
-  
-  // Check for competition end every hour
-  cron.schedule('0 * * * *', async () => {
-    await checkCompetitionEnd();
-  });
-  
-  console.log('⏰ Competition end check scheduled (hourly)');
+  // ✨ COMPETITION END CHECK - TEST MODE: Every minute, PROD: Every hour
+  if (CONFIG.TEST_MODE) {
+    cron.schedule('* * * * *', async () => {
+      await checkCompetitionEnd();
+    });
+    console.log('🧪 TEST MODE: Competition end check every minute');
+  } else {
+    cron.schedule('0 * * * *', async () => {
+      await checkCompetitionEnd();
+    });
+    console.log('⏰ Competition end check scheduled (hourly)');
+  }
 }
 
 // ============================================
