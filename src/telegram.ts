@@ -104,7 +104,6 @@ Admin: Use /start to begin\\!`;
 
 ${lines}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏁 *Ends:* ${endTime}
 
 💡 /lb \\- Check leaderboard
@@ -157,8 +156,6 @@ No deposits in current competition\\.`;
 💰 *Total:* *$${escapeMarkdown(totalUSD.toFixed(2))}*
 📦 *Deposits:* ${deposits.length}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ${depositLines}
 
 ${deposits.length >= 10 ? '\n_Showing last 10 deposits_' : ''}`;
@@ -187,7 +184,6 @@ export function formatWinnerAnnouncement(winners: Array<{
 
 ${lines}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString())} VICTORY \\(\\~$1,000\\)
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
@@ -207,12 +203,13 @@ export async function sendDepositAlert(data: Parameters<typeof formatDepositAler
   });
 }
 
-export async function sendDailyLeaderboard() {
+// Shared function to send leaderboard with banner
+export async function sendLeaderboardWithBanner(chatId: string | number) {
   const message = await formatLeaderboard();
   
   try {
     await bot.sendPhoto(
-      CONFIG.CHAT_ID,
+      chatId,
       BANNERS.LEADERBOARD,
       {
         caption: message,
@@ -222,11 +219,16 @@ export async function sendDailyLeaderboard() {
   } catch (error) {
     console.error('Error sending leaderboard with banner:', error);
     // Fallback to text-only
-    await bot.sendMessage(CONFIG.CHAT_ID, message, { 
+    await bot.sendMessage(chatId, message, { 
       parse_mode: 'MarkdownV2',
       disable_web_page_preview: true 
     });
   }
+}
+
+// Daily leaderboard update (uses shared function)
+export async function sendDailyLeaderboard() {
+  await sendLeaderboardWithBanner(CONFIG.CHAT_ID);
 }
 
 export async function sendWinnerAnnouncement(winners: Parameters<typeof formatWinnerAnnouncement>[0]) {

@@ -14,6 +14,7 @@ import {
   isAdmin,
   formatLeaderboard,
   formatDepositHistory,
+  sendLeaderboardWithBanner,
 } from './telegram';
 import {
   startNewCompetition,
@@ -191,11 +192,7 @@ function setupCommands(bot: any) {
   // /lb - Show leaderboard (anyone can use)
   bot.onText(/\/lb/, async (msg: any) => {
     try {
-      const message = await formatLeaderboard();
-      await bot.sendMessage(msg.chat.id, message, { 
-        parse_mode: 'MarkdownV2',
-        disable_web_page_preview: true 
-      });
+      await sendLeaderboardWithBanner(msg.chat.id);
     } catch (error) {
       console.error('Error showing leaderboard:', error);
       await bot.sendMessage(msg.chat.id, '❌ Error fetching leaderboard');
