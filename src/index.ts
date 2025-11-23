@@ -177,7 +177,7 @@ function setupCommands(bot: any) {
   📊 COMPETITION INFO:
   - Duration: ${durationText}
   - Min Deposit: $${CONFIG.MIN_DEPOSIT_USD}
-  - Prize Pool: ~$1,000 in VICTORY tokens
+  - Prize Pool: ~$2,500 in VICTORY tokens
   - Vesting: 30 days (daily distribution)
 
   🏊 TRACKED POOLS:

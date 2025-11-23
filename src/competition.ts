@@ -55,12 +55,13 @@ Use /stop to end it early \\(admin only\\)`;
    • Victory/SUI LP
    • Victory/USDC LP
 
-💰 *PRIZE POOL \\(\\~$1,000\\):*
-   🥇 1st: 200,000 VICTORY
-   🥈 2nd: 75,000 VICTORY
-   🥉 3rd: 50,000 VICTORY
-   4️⃣ 4th: 20,000 VICTORY
-   5️⃣ 5th: 10,000 VICTORY
+💰 *PRIZE POOL \\(\\~$2,500\\):*
+   🥇 1st: 550,000 VICTORY
+   🥈 2nd: 200,000 VICTORY
+   🥉 3rd: 125,000 VICTORY
+   4️⃣ 4th: 75,000 VICTORY
+   5️⃣ 5th: 50,000 VICTORY
+   $200 of SUITRUMP to ONE RANDOM STAKE
 
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
