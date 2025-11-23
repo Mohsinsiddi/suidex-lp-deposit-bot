@@ -78,17 +78,17 @@ export const PAIRS = {
 };
 
 export const DECIMALS = {
-  VICTORY: 9,
+  VICTORY: 6,
   SUI: 9,
   USDC: 6,
 };
 
 export const PRIZES = {
-  1: 200000,
-  2: 75000,
-  3: 50000,
-  4: 20000,
-  5: 10000,
+  1: 550000,
+  2: 200000,
+  3: 125000,
+  4: 75000,
+  5: 50000,
 };
 
 export const BANNERS = {
