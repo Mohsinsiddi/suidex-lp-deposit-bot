@@ -183,6 +183,7 @@ function setupCommands(bot: any) {
   🏊 TRACKED POOLS:
   - Victory/SUI LP
   - Victory/USDC LP
+  - BTC/VICTORY LP
 
   💡 All deposits are tracked automatically!`;
 

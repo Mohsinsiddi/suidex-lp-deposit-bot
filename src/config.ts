@@ -12,7 +12,8 @@ const required = [
   'PACKAGE_ID',
   'FARM_ID',
   'VICTORY_SUI_PAIR',
-  'VICTORY_USDC_PAIR'
+  'VICTORY_USDC_PAIR',
+  'BTC_VICTORY_PAIR'
 ];
 
 for (const key of required) {
@@ -54,6 +55,7 @@ export const CONTRACTS = {
   VICTORY_TOKEN: process.env.VICTORY_TOKEN!,
   SUI_TYPE: process.env.SUI_TYPE!,
   USDC_TYPE: process.env.USDC_TYPE!,
+  WBTC_TYPE: process.env.WBTC_TYPE!,
 };
 
 export const PAIRS = {
@@ -75,12 +77,22 @@ export const PAIRS = {
     token0Symbol: 'VICTORY',
     token1Symbol: 'USDC',
   },
+  BTC_VICTORY: {
+    id: process.env.BTC_VICTORY_PAIR!,
+    name: 'BTC/VICTORY',
+    lpType: `${CONTRACTS.PACKAGE_ID}::pair::LPCoin<${CONTRACTS.WBTC_TYPE},${CONTRACTS.VICTORY_TOKEN}>`,
+    token0: CONTRACTS.WBTC_TYPE,
+    token1: CONTRACTS.VICTORY_TOKEN,
+    token0Symbol: 'BTC',
+    token1Symbol: 'VICTORY',
+  },
 };
 
 export const DECIMALS = {
   VICTORY: 6,
   SUI: 9,
   USDC: 6,
+  WBTC: 8,
 };
 
 export const PRIZES = {

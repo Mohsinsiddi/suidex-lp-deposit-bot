@@ -54,6 +54,7 @@ Use /stop to end it early \\(admin only\\)`;
 🎯 *TARGET POOLS:*
    • Victory/SUI LP
    • Victory/USDC LP
+   • BTC/VICTORY LP
 
 💰 *PRIZE POOL \\(\\~$2,500\\):*
    🥇 1st: 550,000 VICTORY

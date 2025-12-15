@@ -15,7 +15,7 @@ export class EventListener {
   private client: SuiClient;
   private onStakeCallback?: (event: StakeEvent) => Promise<void>;
   private pollingInterval?: NodeJS.Timeout;
-  private seenEvents: Set<string> = new Set(); // Track seen tx digests
+  private seenEvents: Set<string> = new Set();
   private isPolling: boolean = false;
   private botStartTime: number;
 
@@ -29,15 +29,14 @@ export class EventListener {
     console.log('🎧 Starting event listener...');
     console.log(`⏰ Bot start time: ${new Date(this.botStartTime).toLocaleString()}`);
     
-    // First run: Mark existing events as seen without processing
     await this.initializeSeenEvents();
     
     console.log('✅ Event listener active (polling every 5 seconds)');
     console.log('\n📋 TARGET POOLS:');
     console.log(`   Victory/SUI LP:  ${PAIRS.VICTORY_SUI.lpType}`);
-    console.log(`   Victory/USDC LP: ${PAIRS.VICTORY_USDC.lpType}\n`);
+    console.log(`   Victory/USDC LP: ${PAIRS.VICTORY_USDC.lpType}`);
+    console.log(`   BTC/VICTORY LP:  ${PAIRS.BTC_VICTORY.lpType}\n`);
     
-    // Then start polling for new events
     this.pollingInterval = setInterval(async () => {
       await this.pollEvents();
     }, 5000);
@@ -57,11 +56,9 @@ export class EventListener {
 
       console.log(`   Found ${events.data.length} recent Staked events`);
 
-      // Mark all as seen
       for (const event of events.data) {
         const parsedJson = event.parsedJson as any;
         
-        // Fix: pool_type is an object with a 'name' field
         const poolTypeObj = parsedJson.pool_type;
         const poolType = typeof poolTypeObj === 'string' ? poolTypeObj : poolTypeObj.name;
         
@@ -87,7 +84,7 @@ export class EventListener {
         query: {
           MoveEventType: `${CONTRACTS.PACKAGE_ID}::farm::Staked`
         },
-        order: 'descending', // Get newest first
+        order: 'descending',
         limit: 50,
       });
 
@@ -96,7 +93,6 @@ export class EventListener {
         return;
       }
 
-      // Process oldest first (reverse since we got newest first)
       events.data.reverse();
 
       let newEventsCount = 0;
@@ -108,36 +104,30 @@ export class EventListener {
         const digest = event.id.txDigest;
         const eventTimestamp = parseInt(event.timestampMs!);
 
-        // Skip if already seen
         if (this.seenEvents.has(digest)) {
           alreadySeenCount++;
           continue;
         }
 
-        // Mark as seen immediately
         this.seenEvents.add(digest);
         newEventsCount++;
 
-        // Only process events that happened AFTER bot started
         if (eventTimestamp <= this.botStartTime) {
           oldEventsSkipped++;
           continue;
         }
 
-        // This is a NEW event after bot start time!
         const processed = await this.handleEvent(event);
         if (processed) {
           processedSuccessfully++;
         }
       }
 
-      // Log stats if there were new events
       if (newEventsCount > 0 || alreadySeenCount > 0) {
         const timestamp = new Date().toLocaleTimeString();
         console.log(`[${timestamp}] New: ${newEventsCount} | Processed: ${processedSuccessfully} | Already seen: ${alreadySeenCount} | Old: ${oldEventsSkipped} | Tracked: ${this.seenEvents.size}`);
       }
 
-      // Cleanup seen set (keep last 1000)
       if (this.seenEvents.size > 1000) {
         const sortedDigests = Array.from(this.seenEvents);
         const keep = sortedDigests.slice(-500);
@@ -163,7 +153,6 @@ export class EventListener {
       const parsedJson = event.parsedJson as any;
       const staker = parsedJson.staker;
       
-      // Fix: pool_type is an object with a 'name' field
       const poolTypeObj = parsedJson.pool_type;
       const poolType = typeof poolTypeObj === 'string' ? poolTypeObj : poolTypeObj.name;
       
@@ -176,10 +165,8 @@ export class EventListener {
       console.log(`   Amount:    ${amount}`);
       console.log(`   Timestamp: ${timestamp}`);
 
-      // Check if target pool
       console.log(`\n🎯 Checking Pool Match...`);
 
-      // Filter: Only track our 2 pools
       if (!this.isTargetPool(poolType)) {
         console.log(`   ❌ Not a target pool`);
         console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
@@ -215,25 +202,6 @@ export class EventListener {
   }
 
   private isTargetPool(poolType: string): boolean {
-    // Normalize by removing 0x prefix and converting padded zeros
-    const normalizeType = (type: string) => {
-      return type
-        .replace(/0x/g, '')  // Remove 0x
-        .replace(/\b0+(\d+)\b/g, '$1');  // Convert 0000...002 to 2
-    };
-    
-    const normalizedPoolType = normalizeType(poolType);
-    const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
-    const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
-    
-    return (
-      normalizedPoolType === normalizedVictorySUI ||
-      normalizedPoolType === normalizedVictoryUSDC
-    );
-  }
-
-  private getPoolName(poolType: string): string {
-    // Normalize by removing 0x prefix and converting padded zeros
     const normalizeType = (type: string) => {
       return type
         .replace(/0x/g, '')
@@ -243,9 +211,30 @@ export class EventListener {
     const normalizedPoolType = normalizeType(poolType);
     const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
     const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    const normalizedBtcVictory = normalizeType(PAIRS.BTC_VICTORY.lpType);
+    
+    return (
+      normalizedPoolType === normalizedVictorySUI ||
+      normalizedPoolType === normalizedVictoryUSDC ||
+      normalizedPoolType === normalizedBtcVictory
+    );
+  }
+
+  private getPoolName(poolType: string): string {
+    const normalizeType = (type: string) => {
+      return type
+        .replace(/0x/g, '')
+        .replace(/\b0+(\d+)\b/g, '$1');
+    };
+    
+    const normalizedPoolType = normalizeType(poolType);
+    const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
+    const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    const normalizedBtcVictory = normalizeType(PAIRS.BTC_VICTORY.lpType);
     
     if (normalizedPoolType === normalizedVictorySUI) return PAIRS.VICTORY_SUI.name;
     if (normalizedPoolType === normalizedVictoryUSDC) return PAIRS.VICTORY_USDC.name;
+    if (normalizedPoolType === normalizedBtcVictory) return PAIRS.BTC_VICTORY.name;
     return 'Unknown Pool';
   }
 
@@ -349,6 +338,8 @@ export class PriceOracle {
       price = 1.0;
     } else if (tokenType === CONTRACTS.VICTORY_TOKEN) {
       price = await this.getVictoryPrice();
+    } else if (tokenType === CONTRACTS.WBTC_TYPE) {
+      price = await this.getBTCPriceFromCoinGecko();
     } else {
       throw new Error(`Unknown token type: ${tokenType}`);
     }
@@ -370,7 +361,7 @@ export class PriceOracle {
         'https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd',
         { signal: AbortSignal.timeout(5000) }
       );
-      const data:any = await response.json();
+      const data: any = await response.json();
       console.log(`💲 SUI Price from CoinGecko: $${data.sui?.usd}`);
       return data.sui?.usd || 3.5;
     } catch (error) {
@@ -379,8 +370,22 @@ export class PriceOracle {
     }
   }
 
+  private async getBTCPriceFromCoinGecko(): Promise<number> {
+    try {
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',
+        { signal: AbortSignal.timeout(5000) }
+      );
+      const data: any = await response.json();
+      console.log(`💲 BTC Price from CoinGecko: $${data.bitcoin?.usd}`);
+      return data.bitcoin?.usd || 100000;
+    } catch (error) {
+      console.warn('⚠️  CoinGecko API failed, using fallback $100,000');
+      return 100000;
+    }
+  }
+
   private getPoolConfig(poolType: string) {
-    // Normalize by removing 0x prefix and converting padded zeros
     const normalizeType = (type: string) => {
       return type
         .replace(/0x/g, '')
@@ -390,9 +395,11 @@ export class PriceOracle {
     const normalizedPoolType = normalizeType(poolType);
     const normalizedVictorySUI = normalizeType(PAIRS.VICTORY_SUI.lpType);
     const normalizedVictoryUSDC = normalizeType(PAIRS.VICTORY_USDC.lpType);
+    const normalizedBtcVictory = normalizeType(PAIRS.BTC_VICTORY.lpType);
     
     if (normalizedPoolType === normalizedVictorySUI) return PAIRS.VICTORY_SUI;
     if (normalizedPoolType === normalizedVictoryUSDC) return PAIRS.VICTORY_USDC;
+    if (normalizedPoolType === normalizedBtcVictory) return PAIRS.BTC_VICTORY;
     throw new Error(`Unknown pool type: ${poolType}`);
   }
 
@@ -400,6 +407,7 @@ export class PriceOracle {
     if (tokenType === CONTRACTS.SUI_TYPE) return DECIMALS.SUI;
     if (tokenType === CONTRACTS.USDC_TYPE) return DECIMALS.USDC;
     if (tokenType === CONTRACTS.VICTORY_TOKEN) return DECIMALS.VICTORY;
+    if (tokenType === CONTRACTS.WBTC_TYPE) return DECIMALS.WBTC;
     throw new Error(`Unknown token decimals: ${tokenType}`);
   }
 
@@ -407,6 +415,7 @@ export class PriceOracle {
     if (tokenType === CONTRACTS.SUI_TYPE) return 'SUI';
     if (tokenType === CONTRACTS.USDC_TYPE) return 'USDC';
     if (tokenType === CONTRACTS.VICTORY_TOKEN) return 'VICTORY';
+    if (tokenType === CONTRACTS.WBTC_TYPE) return 'BTC';
     return 'UNKNOWN';
   }
 }
