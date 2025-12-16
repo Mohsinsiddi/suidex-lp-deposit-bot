@@ -175,7 +175,7 @@ export function formatWinnerAnnouncement(winners: Array<{
     const suffix = w.rank === 1 ? 'st' : w.rank === 2 ? 'nd' : w.rank === 3 ? 'rd' : 'th';
     return `${medals[idx]} *${w.rank}${suffix} Place*
 [${escapeMarkdown(shortWallet)}](${walletUrl})
-💰 $${escapeMarkdown(w.totalUSD.toFixed(2))} → ${escapeMarkdown(w.prize.toLocaleString())} VICTORY`;
+💰 $${escapeMarkdown(w.totalUSD.toFixed(2))} → ${escapeMarkdown(w.prize.toLocaleString('en-US'))} VICTORY`;
   }).join('\n\n');
   
   const totalPrize = winners.reduce((sum, w) => sum + w.prize, 0);
@@ -184,7 +184,7 @@ export function formatWinnerAnnouncement(winners: Array<{
 
 ${lines}
 
-🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString())} VICTORY
+🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString('en-US'))} VICTORY
 🎲 *BONUS:* 2 random BTC/VICTORY stakers win $100 SUITRUMP each\\!
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
