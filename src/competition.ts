@@ -56,13 +56,19 @@ Use /stop to end it early \\(admin only\\)`;
    • Victory/USDC LP
    • BTC/VICTORY LP
 
-💰 *PRIZE POOL \\(\\~$2,500\\):*
-   🥇 1st: 550,000 VICTORY
+🏆 *TOTAL POOL: 1,000,000 VICTORY*
+   🥇 1st: 500,000 VICTORY
    🥈 2nd: 200,000 VICTORY
    🥉 3rd: 125,000 VICTORY
    4️⃣ 4th: 75,000 VICTORY
    5️⃣ 5th: 50,000 VICTORY
-   $200 of SUITRUMP to ONE RANDOM STAKE
+   6️⃣ 6th: 10,000 VICTORY
+   7️⃣ 7th: 10,000 VICTORY
+   8️⃣ 8th: 10,000 VICTORY
+   9️⃣ 9th: 10,000 VICTORY
+   🔟 10th: 10,000 VICTORY
+
+   🎲 *BONUS:* 2 random BTC/VICTORY stakers win $100 SUITRUMP each\\!
 
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
@@ -115,7 +121,7 @@ Use /start to begin a new competition\\.`;
 
 async function processCompetitionEnd(competitionId: string) {
   // Get top 5 winners
-  const top5 = await getTopLeaderboard(competitionId, 5);
+  const top5 = await getTopLeaderboard(competitionId, 10);
   
   const winners = top5.map((entry, idx) => ({
     rank: idx + 1,

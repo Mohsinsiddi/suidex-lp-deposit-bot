@@ -177,7 +177,8 @@ function setupCommands(bot: any) {
   📊 COMPETITION INFO:
   - Duration: ${durationText}
   - Min Deposit: $${CONFIG.MIN_DEPOSIT_USD}
-  - Prize Pool: ~$2,500 in VICTORY tokens
+  - Prize Pool: 1,000,000 VICTORY (Top 10)
+  - Bonus: 2 random BTC/VICTORY stakers win $100 SUITRUMP each
   - Vesting: 30 days (daily distribution)
 
   🏊 TRACKED POOLS:

@@ -77,7 +77,7 @@ export async function formatLeaderboard(): Promise<string> {
 Admin: Use /start to begin\\!`;
   }
   
-  const top5 = await getTopLeaderboard(competition.competitionId, 5);
+  const top5 = await getTopLeaderboard(competition.competitionId, 10);
   
   if (top5.length === 0) {
     const endTime = formatDateTimeMarkdown(competition.endTime);
@@ -89,7 +89,7 @@ Admin: Use /start to begin\\!`;
 💤 No deposits yet\\. Be the first\\!`;
   }
   
-  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
   const lines = top5.map((entry, idx) => {
     const shortWallet = `${entry.wallet.slice(0, 6)}...${entry.wallet.slice(-6)}`;
     const walletUrl = `https://suiscan.xyz/mainnet/account/${entry.wallet}`;
@@ -167,7 +167,7 @@ export function formatWinnerAnnouncement(winners: Array<{
   totalUSD: number;
   prize: number;
 }>): string {
-  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
   
   const lines = winners.map((w, idx) => {
     const shortWallet = `${w.wallet.slice(0, 6)}...${w.wallet.slice(-6)}`;
@@ -184,7 +184,8 @@ export function formatWinnerAnnouncement(winners: Array<{
 
 ${lines}
 
-🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString())} VICTORY \\(\\~$1,000\\)
+🏆 *Total Rewards:* ${escapeMarkdown(totalPrize.toLocaleString())} VICTORY
+🎲 *BONUS:* 2 random BTC/VICTORY stakers win $100 SUITRUMP each\\!
 ⏳ *Vesting:* 30 days \\(daily distribution\\)
 
 📄 CSV exported for reward distribution\\.
